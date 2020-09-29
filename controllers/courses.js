@@ -16,6 +16,10 @@ const View = mongoose.model("View");
 const Download = mongoose.model("Download");
 
 
+const upload = (req, res) => {
+
+}
+
 const stream = (req, res) => {
     const courseId = req.params.id;
     Course.findById(courseId, function(err, course){
@@ -25,61 +29,67 @@ const stream = (req, res) => {
                 error: err
             });
         } else {
-            const token = req.query.token;
-            const ip = req.ip;
-            let userId;
-            if (token) {
-                jwt.verify(token, process.env.JWT_TOKEN || "secret", (err, user) => {
-                    if (err) {
-                        userId = null;
-                    } else {
-                        userId = user._id;
-                    }
+            if (!course) {
+                res.status(404).json({
+                    message: "Course not found"
                 });
-            }
-            
-            const view = new View();
-            view.viewer = userId;
-            view.course = courseId;
-            view.ipAddress = ip;
-            view.save();
-        
-            const path =  course.videoUrl;
-            /*eslint-disable */
-            const stat = fs.statSync("./" + path);
-            /*eslint-enable */
-            const fileSize = stat.size;
-            const range = req.headers.range;
-        
-            if (range) {
-                const parts = range.replace(/bytes=/, "").split("-");
-                const start = parseInt(parts[0], 10);
-                const end = parts[1]
-                ? parseInt(parts[1], 10)
-                : fileSize-1;
-        
-                const chunksize = (end-start)+1;
-                /*eslint-disable */
-                const file = fs.createReadStream("./" + path, {start, end});
-                /*eslint-enable */
-                const head = {
-                    "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-                    "Accept-Ranges": "bytes",
-                    "Content-Length": chunksize,
-                    "Content-Type": "video/mp4",
-                };
-        
-                res.writeHead(206, head);
-                file.pipe(res);
             } else {
-                const head = {
-                    "Content-Length": fileSize,
-                    "Content-Type": "video/mp4",
-                };
-                res.writeHead(200, head);
+                const token = req.query.token;
+                const ip = req.ip;
+                let userId;
+                if (token) {
+                    jwt.verify(token, process.env.JWT_TOKEN || "secret", (err, user) => {
+                        if (err) {
+                            userId = null;
+                        } else {
+                            userId = user._id;
+                        }
+                    });
+                }
+                
+                const view = new View();
+                view.viewer = userId;
+                view.course = courseId;
+                view.ipAddress = ip;
+                view.save();
+            
+                const path =  course.videoUrl;
                 /*eslint-disable */
-                fs.createReadStream("./" + path).pipe(res);
+                const stat = fs.statSync("./" + path);
                 /*eslint-enable */
+                const fileSize = stat.size;
+                const range = req.headers.range;
+            
+                if (range) {
+                    const parts = range.replace(/bytes=/, "").split("-");
+                    const start = parseInt(parts[0], 10);
+                    const end = parts[1]
+                    ? parseInt(parts[1], 10)
+                    : fileSize-1;
+            
+                    const chunksize = (end-start)+1;
+                    /*eslint-disable */
+                    const file = fs.createReadStream("./" + path, {start, end});
+                    /*eslint-enable */
+                    const head = {
+                        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+                        "Accept-Ranges": "bytes",
+                        "Content-Length": chunksize,
+                        "Content-Type": "video/mp4",
+                    };
+            
+                    res.writeHead(206, head);
+                    file.pipe(res);
+                } else {
+                    const head = {
+                        "Content-Length": fileSize,
+                        "Content-Type": "video/mp4",
+                    };
+                    res.writeHead(200, head);
+                    /*eslint-disable */
+                    fs.createReadStream("./" + path).pipe(res);
+                    /*eslint-enable */
+                }
             }
         }
     });
@@ -143,13 +153,50 @@ const publish = (req, res) => {
 };
 
 const download = (req, res) => {
-    const id = req.params.id;
-    const path = paths.join("./files/videos/1.mp4");
-    res.download("./" + path);
+    const courseId = req.params.id;
+    Course.findById(courseId, function(err, course){
+        if (err) {
+            res.status(404).json({
+                message: "Course download error",
+                error: err
+            });
+        } else {
+            if (course) {
+                const token = req.query.token;
+                const ip = req.ip;
+                let userId;
+                if (token) {
+                    jwt.verify(token, process.env.JWT_TOKEN || "secret", (err, user) => {
+                        if (err) {
+                            userId = null;
+                        } else {
+                            userId = user._id;
+                        }
+                    });
+                }
+                
+                const download = new Download();
+                download.downloader = userId;
+                download.course = courseId;
+                download.ipAddress = ip;
+                download.save();
+            
+                const path =  course.videoUrl;
+                /*eslint-disable */
+                res.download("./" + path);
+                /*eslint-enable */
+            } else {
+                res.status(404).json({
+                    message: "Course not found"
+                });
+            }
+        }    
+    });
 };
 
 module.exports = {
     stream,
     download,
-    publish
+    publish,
+    upload
 };
