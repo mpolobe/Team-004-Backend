@@ -107,13 +107,19 @@ const stream = (req, res) => {
                     });
                 }
                 
+                const path =  course.videoUrl;
+                if (!path) {
+                    return res.status(404).json({
+                        message: "Video not found"
+                    });
+                }
+                
                 const view = new View();
                 view.viewer = userId;
                 view.course = courseId;
                 view.ipAddress = ip;
                 view.save();
             
-                const path =  course.videoUrl;
                 /*eslint-disable */
                 const stat = fs.statSync("./" + path);
                 /*eslint-enable */
@@ -234,13 +240,19 @@ const download = (req, res) => {
                     });
                 }
                 
+                const path =  course.videoUrl;
+                if (!path) {
+                    return res.status(404).json({
+                        message: "Video not found"
+                    });
+                }
+                
                 const download = new Download();
                 download.downloader = userId;
                 download.course = courseId;
                 download.ipAddress = ip;
                 download.save();
             
-                const path =  course.videoUrl;
                 /*eslint-disable */
                 res.download("./" + path);
                 /*eslint-enable */
@@ -264,6 +276,11 @@ const thumbnail = (req, res) => {
         } else {
             if (course) {
                 const path =  course.thumbnailUrl;
+                if (!path) {
+                    return res.status(404).json({
+                        message: "Thumbnail not found"
+                    });
+                }
                 /*eslint-disable */
                 res.download("./" + path);
                 /*eslint-enable */
