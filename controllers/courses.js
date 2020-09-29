@@ -1,9 +1,12 @@
 const fs = require("fs");
-const paths = require("path");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const { v1: uuidv1 } = require("uuid");
+const ThumbnailGenerator =  require("video-thumbnail-generator").default;
 
 const TEACHER_ROLE = "TEACHER";
+const THUMBNAIL_PATH = "files/courses/img/";
+const VIDEO_PATH = "files/courses/videos/";
 
 require("../models/users");
 require("../models/courses");
@@ -17,8 +20,65 @@ const Download = mongoose.model("Download");
 
 
 const upload = (req, res) => {
-
-}
+    const token = req.query.token;
+    let userId;
+    if (token) {
+        jwt.verify(token, process.env.JWT_TOKEN || "secret", (err, user) => {
+            if (err) {
+                res.status(403).json({
+                    message: "Token auth error",
+                    error: err
+                });
+            } else {
+                if (user.role.toUpperCase() === TEACHER_ROLE) {
+                    userId = user._id;
+                    if (!req.files || Object.keys(req.files).length === 0) {
+                        return res.status(400).json({
+                            message: "No files were uploaded."
+                        });
+                    }
+                    
+                    let vid = req.files.video;
+                    const name = uuidv1();
+                    const  path = VIDEO_PATH + name + vid.name.substr(vid.name.lastIndexOf("."));;
+                
+                    vid.mv(path, function(err) {
+                        if (err)
+                            return res.status(500).json({
+                                message: "upload error",
+                                error: err
+                            });
+                        const tg = new ThumbnailGenerator({
+                            sourcePath: "./" + path,
+                            thumbnailPath: THUMBNAIL_PATH
+                        });
+                        tg.generateOneByPercentCb(10, (err, result) => {
+                            if (err) {
+                                return res.json({
+                                    message: "File uploaded!",
+                                    videoUrl: path,
+                                    thumbnailUrl: null,
+                                    thumbnailError: err
+                                });
+                            }
+                            return res.json({
+                                message: "File uploaded!",
+                                videoUrl: path,
+                                thumbnailUrl: THUMBNAIL_PATH + result
+                            });
+                          });
+                    });
+                } else {
+                    res.status("403").json({
+                        message: "Only Teachers can publish"
+                    });
+                }
+            }
+        });
+    } else {
+        res.status(403).send("Auth token required");
+    }
+};
 
 const stream = (req, res) => {
     const courseId = req.params.id;
@@ -97,7 +157,6 @@ const stream = (req, res) => {
 
 const publish = (req, res) => {
     const token = req.query.token;
-    const ip = req.ip;
     let userId;
     if (token) {
         jwt.verify(token, process.env.JWT_TOKEN || "secret", (err, user) => {
@@ -194,9 +253,33 @@ const download = (req, res) => {
     });
 };
 
+const thumbnail = (req, res) => {
+    const courseId = req.params.id;
+    Course.findById(courseId, function(err, course){
+        if (err) {
+            res.status(404).json({
+                message: "Course thumbnail error",
+                error: err
+            });
+        } else {
+            if (course) {
+                const path =  course.thumbnailUrl;
+                /*eslint-disable */
+                res.download("./" + path);
+                /*eslint-enable */
+            } else {
+                res.status(404).json({
+                    message: "Course not found"
+                });
+            }
+        }    
+    });
+};
+
 module.exports = {
     stream,
     download,
     publish,
-    upload
+    upload,
+    thumbnail
 };
