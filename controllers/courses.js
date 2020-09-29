@@ -40,14 +40,15 @@ const upload = (req, res) => {
                     
                     let vid = req.files.video;
                     const name = uuidv1();
-                    const  path = VIDEO_PATH + name + vid.name.substr(vid.name.lastIndexOf("."));;
+                    const  path = VIDEO_PATH + name + vid.name.substr(vid.name.lastIndexOf("."));
                 
                     vid.mv(path, function(err) {
-                        if (err)
+                        if (err) {
                             return res.status(500).json({
                                 message: "upload error",
                                 error: err
                             });
+                        }
                         const tg = new ThumbnailGenerator({
                             sourcePath: "./" + path,
                             thumbnailPath: THUMBNAIL_PATH

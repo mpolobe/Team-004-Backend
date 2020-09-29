@@ -2,7 +2,7 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-const fileUpload = require('express-fileupload');
+const fileUpload = require("express-fileupload");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
@@ -27,6 +27,6 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/courses", coursesRouter);
 
-//let server = app.listen(3000, () => console.log('Listening on port: ', server.address().port))
+//let server = app.listen(3000, () => console.log("Listening on port: ", server.address().port))
 
 module.exports = app;
