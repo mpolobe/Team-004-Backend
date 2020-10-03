@@ -1,6 +1,6 @@
 var express = require("express");
 var path = require("path");
-var cors = require('cors');
+var cors = require("cors");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const fileUpload = require("express-fileupload");
@@ -20,7 +20,7 @@ dotenv.config();
 app.use(logger("dev"));
 app.use(fileUpload());
 app.use(express.json());
-app.use(cors())
+app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
