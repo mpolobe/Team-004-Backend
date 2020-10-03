@@ -3,11 +3,13 @@ var path = require("path");
 var cors = require('cors');
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+const fileUpload = require("express-fileupload");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var coursesRouter = require("./routes/courses");
 const dotenv = require("dotenv");
+
 
 require("./models/db");
 require("./config/passport");
@@ -16,6 +18,7 @@ var app = express();
 dotenv.config();
 
 app.use(logger("dev"));
+app.use(fileUpload());
 app.use(express.json());
 app.use(cors())
 app.use(express.urlencoded({ extended: false }));
@@ -26,6 +29,6 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/courses", coursesRouter);
 
-//let server = app.listen(3000, () => console.log('Listening on port: ', server.address().port))
+//let server = app.listen(3000, () => console.log("Listening on port: ", server.address().port))
 
 module.exports = app;
