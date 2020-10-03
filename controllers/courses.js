@@ -337,8 +337,8 @@ const find = (req, res) => {
         ]);
     }
     query
-        .skip(skip)
-        .limit(limit)
+        .skip(Number(skip))
+        .limit(Number(limit))
         .sort({updatedAt: -1})
         .exec(function(err, courses){
             if (err) {
