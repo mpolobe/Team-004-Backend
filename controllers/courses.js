@@ -318,13 +318,16 @@ const findById = (req, res) => {
     });
 };
 
+/*eslint complexity: ["error", 10]*/
 const find = (req, res) => {
     let text = req.query.query || req.body.query;
     const skip = req.query.skip || req.body.skip || 0;
     const limit = req.query.limit || req.body.limit || 4;
     if (text) {
         text = escapeStringRegexp(text);
+        /*eslint-disable */
         text = new RegExp(text, "i");
+        /*eslint-enable */
     }
     let query = Course.find();
     if (text) {
