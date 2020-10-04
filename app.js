@@ -3,12 +3,11 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const fileUpload = require("express-fileupload");
-
+const cors = require("cors");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var coursesRouter = require("./routes/courses");
 const dotenv = require("dotenv");
-
 
 require("./models/db");
 require("./config/passport");
@@ -16,6 +15,8 @@ require("./config/passport");
 var app = express();
 dotenv.config();
 
+app.use(cors());
+app.options("*", cors());
 app.use(logger("dev"));
 app.use(fileUpload());
 app.use(express.json());
