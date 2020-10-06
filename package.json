@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "build": "build:lambda":"netlify-lambda build bin/www"
+   "build:lambda":"netlify-lambda build bin/www"
   },
   "engines": {
     "node": ">=13.7.0",
